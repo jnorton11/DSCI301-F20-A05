@@ -1,0 +1,108 @@
+---
+title: "Assignment 5"
+author: "Jenny Norton"
+date: "9/19/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Assignment 5
+
+Load "Tidyverse" library.
+
+```{r}
+library(tidyverse)
+```
+
+## Question 1
+For this problem, you will use readr to load the data you selected for Project 1. Write an appropriate read_csv command, using explicitly given col_ types to read the data, as we did in class.
+
+
+Get the pathname to the file with the `here` package:
+```{r}
+library(here)
+ufo_data_path <- here("Project1Data", "ufodata.csv")
+```
+
+Read it in with `readr`
+```{r}
+ufo_data <- read_csv(ufo_data_path)
+
+```
+
+Let's fix the columns.  I'm going to change date_documented to a date field.  Also the date_time column but I'll wait until we learn more about date and time and I'll leave it character for now.
+
+```{r}
+ufo_data <- read_csv(ufo_data_path,
+                     col_types = 
+                       cols(
+  Date_time = col_character(),
+  city = col_character(),
+  `state/province` = col_character(),
+  country = col_character(),
+  UFO_shape = col_character(),
+  length_of_encounter_seconds = col_double(),
+  described_duration_of_encounter = col_character(),
+  description = col_character(),
+  date_documented = col_date (format = "%m/%d/%Y %*"),
+  latitude = col_double(),
+  longitude = col_double()
+)
+)
+
+```
+
+I have a parsing failure in latitude and length_of_encounter due to a trailing character but I won't worry about that now because there aren't that many.
+
+## Question 2
+Now that you have your data imported, select one variable in your data set, and perform a (very basic and preliminary) exploratory analysis of that variable. You might produce a graph of the distribution, or produce some summary statistics, or make a table. 
+
+I want to see what shapes and how many of each are in the UFO_shape column.
+```{r}
+ufo_data %>%
+  count(UFO_shape)
+```
+
+```{r}
+ggplot(ufo_data) +
+    geom_bar(aes(x = UFO_shape)) +
+               coord_flip() +
+  labs(title = "UFO Data by Shape", x = "UFO Shape")
+```
+
+## Question 3
+Now select two variables in your data set, and examine the covariation between them. Again, you might use a graph, a table, or something else to explore the relationship. Describe the relationship you find. If anything requires cleaning before your analysis, perform that step as well, and mention it.
+
+```{r}
+colnames(ufo_data)
+```
+
+Let's see the State the sighting happened.
+```{r}
+table(ufo_data$`state/province`)
+```
+
+```{r}
+ufo_data %>%
+  filter(!is.na(UFO_shape), !is.na(`state/province`), `state/province` == "ny") %>%
+  ggplot((aes(x = `UFO_shape`, y = `state/province`))) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  coord_flip() +
+  labs(title = "NY State UFO sightings")
+```
+
+I'm not sure why this isn't doing what I want.  I wanted to see the number of UFO Sightings in NY distributed by UFO Shape.
+
+```{r}
+ufo_data %>%
+  filter(!is.na(UFO_shape), !is.na(`state/province`), `state/province` == "ny") %>%
+ggplot() +
+      geom_bar(aes(x = UFO_shape)) +
+               coord_flip() +
+  labs(title = "NY State UFO Data by Shape", x = "UFO Shape", y = "Number in NY")
+```
+That looks better!
