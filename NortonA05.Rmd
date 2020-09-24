@@ -27,6 +27,8 @@ library(here)
 ufo_data_path <- here("Project1Data", "ufodata.csv")
 ```
 
+<span style="color: green; font-size: 14pt">Note:  This indicates your data file was in a subfolder of the project called "Project1Data".  It wasn't, so I moved it into that folder in the repo.</span> 
+
 Read it in with `readr`
 ```{r}
 ufo_data <- read_csv(ufo_data_path)
@@ -66,8 +68,30 @@ ufo_data %>%
   count(UFO_shape)
 ```
 
+<span style="color: green; font-size: 14pt">I'd sort this by size--or even limit to large sizes:</span> 
+```{r}
+ufo_data %>%
+  count(UFO_shape) %>%
+  filter(n>500) %>% 
+  arrange(desc(n))
+```
+
 ```{r}
 ggplot(ufo_data) +
+    geom_bar(aes(x = UFO_shape)) +
+               coord_flip() +
+  labs(title = "UFO Data by Shape", x = "UFO Shape")
+```
+
+<span style="color: green; font-size: 14pt">This is probably also worth restricting the rare ones out.  I also got rid of the NAs:</span> 
+
+```{r}
+ufo_data %>%
+  group_by(UFO_shape) %>%
+  mutate(shape_count = n()) %>%
+  filter(shape_count > 500, !is.na(UFO_shape)) %>%
+  ungroup() %>%
+ggplot() +
     geom_bar(aes(x = UFO_shape)) +
                coord_flip() +
   labs(title = "UFO Data by Shape", x = "UFO Shape")
@@ -96,6 +120,23 @@ ufo_data %>%
 ```
 
 I'm not sure why this isn't doing what I want.  I wanted to see the number of UFO Sightings in NY distributed by UFO Shape.
+
+<span style="color: green; font-size: 14pt">If you're wanting a dot plot for shape counts, you'll need a count value.  You could generate one using a mutate and then pass to ggplot:</span> 
+
+```{r}
+ufo_data %>%
+  filter(!is.na(UFO_shape), !is.na(`state/province`), `state/province` == "ny") %>%
+  group_by(UFO_shape) %>%
+  mutate(Shape_Count = n()) %>%
+  ungroup() %>%
+  ggplot((aes(x = UFO_shape, y = Shape_Count))) +
+  geom_point() +
+  coord_flip()  +
+  labs(title = "NY State UFO sightings")
+```
+
+<span style="color: green; font-size: 14pt">(Also, a smoother here doesn't make sense.)</span> 
+
 
 ```{r}
 ufo_data %>%
